@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import psutil
 
-class Application(tk.Frame):
+class Monitor(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
@@ -12,24 +12,39 @@ class Application(tk.Frame):
 
     def create_widgets(self):
         
-        self.percentBarCPU = ttk.Progressbar(self,length=200,mode="determinate",orient=tk.HORIZONTAL)
+        self.percentBarCPU = ttk.Progressbar(self,length=400,mode="determinate",orient=tk.HORIZONTAL)
         self.percentBarCPU.pack()
+        
+        CPUperc = tk.StringVar(self)
 
-        self.CPUlabel = ttk.Label(self,text="Porcentaje de CPU en uso")
+
+        self.CPUlabel = ttk.Label(self,text="Porcentaje de CPU en uso:")
         self.CPUlabel.pack()
-
         
 
-        self.percentBarMEM = ttk.Progressbar(self,length=200,mode="determinate",orient=tk.HORIZONTAL)
+        self.percentBarMEM = ttk.Progressbar(self,length=400,mode="determinate",orient=tk.HORIZONTAL)
         self.percentBarMEM.pack()
 
-        self.CPUlabel = ttk.Label(self,text="Porcentaje de MEMORIA en uso",)
+        self.CPUlabel = ttk.Label(self,text="Porcentaje de MEMORIA en uso:",)
         self.CPUlabel.pack()
         
 
-        self.quit = tk.Button(self, text="QUIT", fg="red",
+        self.quit = tk.Button(self, text="Salir", fg="black",
                               command=root.destroy)
         self.quit.pack(side="bottom")
+        
+        xscroll = tk.Scrollbar(self)
+        xscroll.pack(side="right", fill="y")
+
+
+        self.lstbox = tk.Listbox(self,width=80,heigh=20,yscrollcommand=xscroll.set)
+        xscroll.config(command=self.lstbox.yview)
+       
+        lstproc = psutil.pids()
+        for i in lstproc:
+        	self.lstbox.insert(i,psutil.Process(i).name())
+        self.lstbox.pack()
+
 
     def read_percentCPU(self):
         
@@ -45,7 +60,21 @@ class Application(tk.Frame):
         # Lee el estado de porcentaje en uso de MEM cada 50ms
         self.after(50, self.read_percentMEM)
 
+    def bytes2human(n):
+    #funcion que convierte de Bytes a distintas magnitudes mas legibles para el usuario
+    # http://code.activestate.com/recipes/578019
+    
+	    symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+	    prefix = {}
+	    for i, s in enumerate(symbols):
+	        prefix[s] = 1 << (i + 1) * 10
+	    for s in reversed(symbols):
+	        if n >= prefix[s]:
+	            value = float(n) / prefix[s]
+	            return '%.1f%s' % (value, s)
+	    return "%sB" % n
+
 root = tk.Tk()
 root.title("Monitor Procesos")
-app = Application(master=root)
+app = Monitor(master=root)
 app.mainloop()
